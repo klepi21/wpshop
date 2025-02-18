@@ -5,15 +5,17 @@ import { orderService } from '@/services/orders';
 import { Clock, Package, CheckCircle, XCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface TrackingNumber {
+  orderId: string;
+  number: string;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [editingTrackingNumber, setEditingTrackingNumber] = useState<{
-    orderId: string;
-    number: string;
-  } | null>(null);
+  const [editingTrackingNumber, setEditingTrackingNumber] = useState<TrackingNumber | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -204,7 +206,7 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
-                          value={editingTrackingNumber.number}
+                          value={editingTrackingNumber?.number || ''}
                           onChange={(e) => setEditingTrackingNumber({
                             orderId: order.id,
                             number: e.target.value
@@ -212,7 +214,11 @@ export default function AdminOrdersPage() {
                           className="bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-sm"
                         />
                         <button
-                          onClick={() => handleTrackingNumberUpdate(order.id, editingTrackingNumber.number)}
+                          onClick={() => {
+                            if (editingTrackingNumber) {
+                              handleTrackingNumberUpdate(order.id, editingTrackingNumber.number);
+                            }
+                          }}
                           className="text-emerald-500 text-sm hover:text-emerald-400"
                         >
                           Save
