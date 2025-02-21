@@ -3,7 +3,11 @@
 import { useGetAccount } from '@multiversx/sdk-dapp/hooks';
 import { WalletButton } from '@/components/wallet/WalletButton';
 
-const ADMIN_ADDRESS = 'erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4';
+const ADMIN_ADDRESSES = [
+  'erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4',
+  'erd1f3rwh7fzfq0he8vwvd4f82pdj4eaxxjcxdarx2x4kxq28u06mmgq3r24vg',
+  'erd12xqam5lxx6xeteaewx25xarqd3ypleetkv35w40nuqchsxqar9zqkslg66'
+];
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const { address } = useGetAccount();
@@ -20,7 +24,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (address !== ADMIN_ADDRESS) {
+  if (!ADMIN_ADDRESSES.includes(address)) {
     return (
       <div className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center">
         <div className="text-center">
