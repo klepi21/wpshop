@@ -17,7 +17,7 @@ export function CategoryModal({ isOpen, onClose, category, onCategorySaved }: Ca
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image_url: ''
+    image: ''
   });
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function CategoryModal({ isOpen, onClose, category, onCategorySaved }: Ca
       setFormData({
         name: category.name,
         description: category.description || '',
-        image_url: category.image_url || ''
+        image: category.image || ''
       });
     }
   }, [category]);
@@ -86,8 +86,8 @@ export function CategoryModal({ isOpen, onClose, category, onCategorySaved }: Ca
             </label>
             <input
               type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+              value={formData.image}
+              onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
               className="w-full px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white"
             />
           </div>
