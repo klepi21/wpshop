@@ -7,7 +7,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { orderService, productService } from '@/services';
+import { orderService } from '@/services/orders';
+import { productService } from '@/services/products';
 
 interface CheckoutForm {
   email: string;
@@ -58,7 +59,7 @@ export default function CheckoutPage() {
         customer_postal_code: form.zip,
         items: orderItems,
         total_amount: total,
-        payment_method: selectedPaymentMethod,
+        payment_method: 'crypto',
         status: 'pending'
       };
 
@@ -197,7 +198,7 @@ export default function CheckoutPage() {
                 >
                   <div className="relative w-20 aspect-square rounded-lg overflow-hidden flex-shrink-0">
                     <Image
-                      src={item.images[0]}
+                      src={item.image}
                       alt={item.name}
                       fill
                       className="object-cover"
