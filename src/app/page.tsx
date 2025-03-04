@@ -11,26 +11,24 @@ import { Faq3 } from '@/components/blocks/faq3';
 import { CraftsmanshipTimeline } from "@/components/blocks/CraftsmanshipTimeline";
 import { WoodworkTestimonials } from "@/components/blocks/WoodworkTestimonials";
 import { BrandsGridDemo } from '@/components/ui/brands-demo';
+import { ProductCard } from '@/components/shop/ProductCard';
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const loadFeaturedProducts = async () => {
+      try {
+        const data = await productService.getFeaturedProducts();
+        setFeaturedProducts(data);
+      } catch (error) {
+        console.error('Failed to load featured products:', error);
+      }
+    };
+
     loadFeaturedProducts();
   }, []);
-
-  const loadFeaturedProducts = async () => {
-    try {
-      const products = await productService.getAll();
-      setFeaturedProducts(products.slice(0, 3)); // Show first 3 products
-    } catch (error) {
-      console.error('Failed to load featured products:', error);
-      toast.error('Failed to load featured products');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const faqs = [
     {
@@ -67,39 +65,14 @@ export default function HomePage() {
       />
       
       {/* Featured Products */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-12 text-center">Featured Products</h2>
-          {isLoading ? (
-            <div className="text-white text-center">Loading featured products...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {featuredProducts.map((product) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="group"
-                >
-                  <Link href={`/shop/product/${product.slug}`}>
-                    <div className="relative aspect-square overflow-hidden rounded-xl bg-zinc-900">
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="mt-4">
-                      <h3 className="text-white font-medium">{product.name}</h3>
-                      <p className="text-white/60">${product.price.toFixed(2)}</p>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          )}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-white mb-8">Featured Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
       </section>
 

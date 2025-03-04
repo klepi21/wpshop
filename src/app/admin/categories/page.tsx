@@ -29,6 +29,11 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleEdit = (category: any) => {
+    setEditingCategory(category);
+    setIsModalOpen(true);
+  };
+
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
@@ -58,7 +63,10 @@ export default function AdminCategoriesPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Categories</h1>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingCategory(null);
+            setIsModalOpen(true);
+          }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[#A67C52] text-white rounded-lg hover:bg-[#A67C52]/80 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -119,12 +127,12 @@ export default function AdminCategoriesPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/categories/${category.id}`}
+                    <button
+                      onClick={() => handleEdit(category)}
                       className="p-2 text-white/60 hover:text-white rounded-lg hover:bg-white/5"
                     >
                       <Pencil className="w-4 h-4" />
-                    </Link>
+                    </button>
                     <button
                       onClick={() => handleDelete(category.id)}
                       className="p-2 text-white/60 hover:text-red-500 rounded-lg hover:bg-white/5"

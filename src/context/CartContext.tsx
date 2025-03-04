@@ -2,15 +2,21 @@
 
 import { createContext, useContext, useState } from 'react';
 import { Product } from '@/types/shop';
+import { toast } from 'react-hot-toast';
 
-interface CartItem extends Product {
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
   quantity: number;
-  selectedSize?: string;
+  image: string;
+  variation?: string;
+  customization?: string;
 }
 
 export interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity: number, selectedSize?: string) => void;
+  addToCart: (product: any, quantity: number, variation?: string, customization?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -23,18 +29,30 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = (product: Product, quantity: number, selectedSize?: string) => {
+  const addToCart = (product: any, quantity: number, variation?: string, customization?: string) => {
     setItems(currentItems => {
-      const existingItem = currentItems.find(item => item.id === product.id);
-      if (existingItem) {
-        return currentItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity, selectedSize }
-            : item
-        );
+      const existingItemIndex = currentItems.findIndex(
+        item => item.id === product.id && item.variation === variation
+      );
+
+      if (existingItemIndex > -1) {
+        const newItems = [...currentItems];
+        newItems[existingItemIndex].quantity += quantity;
+        return newItems;
       }
-      return [...currentItems, { ...product, quantity, selectedSize }];
+
+      return [...currentItems, {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        image: product.images[0],
+        variation,
+        customization
+      }];
     });
+
+    toast.success('Added to cart');
   };
 
   const removeFromCart = (productId: string) => {

@@ -49,5 +49,16 @@ export const categoryService = {
       .eq('id', id);
     
     if (error) throw error;
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 }; 

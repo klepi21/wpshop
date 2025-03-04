@@ -6,6 +6,8 @@ import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { orderService, productService } from '@/services';
 
 interface CheckoutForm {
   email: string;
@@ -38,12 +40,54 @@ export default function CheckoutPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Create order items with variations
+      const orderItems = items.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        variation: item.variation
+      }));
 
-    // Clear cart and redirect to success page
-    clearCart();
-    router.push('/shop/checkout/success');
+      const orderData = {
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_address: form.address,
+        customer_city: form.city,
+        customer_country: form.country,
+        customer_postal_code: form.zip,
+        items: orderItems,
+        total_amount: total,
+        payment_method: selectedPaymentMethod,
+        status: 'pending'
+      };
+
+      const order = await orderService.create(orderData);
+
+      // Update stock for each item
+      for (const item of items) {
+        if (item.variation) {
+          // Update variation stock
+          await productService.updateVariationStock(
+            item.id,
+            item.variation,
+            -item.quantity
+          );
+        } else {
+          // Update product stock
+          await productService.updateStock(item.id, -item.quantity);
+        }
+      }
+
+      // Clear cart and redirect to success page
+      clearCart();
+      router.push('/shop/checkout/success');
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to process checkout');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -73,18 +73,10 @@ export const orderService = {
     const { data, error } = await supabase
       .from('orders')
       .insert({
-        full_name: orderData.full_name,
-        email: orderData.email,
-        shipping_address: orderData.shipping_address,
-        city: orderData.city,
-        postal_code: orderData.postal_code,
-        country: orderData.country,
-        customer_name: orderData.full_name,
-        customer_email: orderData.email,
-        status: orderData.status,
-        total_amount: orderData.total_amount,
-        shipping_method: orderData.shipping_method,
-        wallet_address: orderData.wallet_address
+        ...orderData,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();

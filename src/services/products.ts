@@ -16,7 +16,10 @@ export const productService = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('products')
-      .select('*, categories(*)')
+      .select(`
+        *,
+        variations:product_variations (*)
+      `)
       .eq('id', id)
       .single();
     
@@ -24,73 +27,73 @@ export const productService = {
     return data;
   },
 
-  async create(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) {
-    const {
-      name,
-      description,
-      price,
-      stock,
-      images,
-      category_id
-    } = product;
-
-    const createData = {
-      name,
-      description,
-      price: typeof price === 'string' ? parseFloat(price) : price,
-      stock: typeof stock === 'string' ? parseInt(stock) : stock,
-      images: Array.isArray(images) ? images : [],
-      category_id,
-      slug: this.generateSlug(name)
-    };
-
-    const { data, error } = await supabase
-      .from('products')
-      .insert(createData)
-      .select('*, category:categories(*)')
-      .single();
+  async create(productData: any) {
+    const { variations, ...product } = productData;
     
-    if (error) {
-      console.error('Create error:', error);
-      throw error;
+    // Create the product
+    const { data: newProduct, error: productError } = await supabase
+      .from('products')
+      .insert(product)
+      .select()
+      .single();
+
+    if (productError) throw productError;
+
+    // Create variations if they exist
+    if (variations && variations.length > 0) {
+      const variationData = variations.map((v: any) => ({
+        product_id: newProduct.id,
+        name: v.name,
+        stock: v.stock
+      }));
+
+      const { error: variationsError } = await supabase
+        .from('product_variations')
+        .insert(variationData);
+
+      if (variationsError) throw variationsError;
     }
-    return data;
+
+    return newProduct;
   },
 
-  async update(id: string, product: Partial<Product>) {
-    console.log('Update called with:', { id, product }); // Debug log
-
-    const updateData = {
-      ...(product.name && { name: product.name }),
-      ...(product.description !== undefined && { description: product.description }),
-      ...(product.price !== undefined && { 
-        price: typeof product.price === 'string' ? parseFloat(product.price) : product.price 
-      }),
-      ...(product.stock !== undefined && { 
-        stock: typeof product.stock === 'string' ? parseInt(product.stock) : product.stock 
-      }),
-      ...(product.images && { images: product.images }),
-      ...(product.category_id && { category_id: product.category_id }),
-      has_sizes: product.has_sizes, // Make sure this is included without condition
-      ...(product.name && { slug: this.generateSlug(product.name) }),
-      updated_at: new Date().toISOString()
-    };
-
-    console.log('Final update data:', updateData); // Debug log
-
-    const { data, error } = await supabase
-      .from('products')
-      .update(updateData)
-      .eq('id', id)
-      .select('*, category:categories(*)')
-      .single();
+  async update(id: string, productData: any) {
+    const { variations, ...product } = productData;
     
-    if (error) {
-      console.error('Update error:', error);
-      throw error;
+    // Update the product
+    const { data: updatedProduct, error: productError } = await supabase
+      .from('products')
+      .update(product)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (productError) throw productError;
+
+    // Delete existing variations
+    const { error: deleteError } = await supabase
+      .from('product_variations')
+      .delete()
+      .eq('product_id', id);
+
+    if (deleteError) throw deleteError;
+
+    // Create new variations if they exist
+    if (variations && variations.length > 0) {
+      const variationData = variations.map((v: any) => ({
+        product_id: id,
+        name: v.name,
+        stock: v.stock
+      }));
+
+      const { error: variationsError } = await supabase
+        .from('product_variations')
+        .insert(variationData);
+
+      if (variationsError) throw variationsError;
     }
 
-    return data;
+    return updatedProduct;
   },
 
   async delete(id: string) {
@@ -103,16 +106,20 @@ export const productService = {
   },
 
   async getBySlug(slug: string) {
-    console.log('getBySlug called with:', slug); // Debug log
+    console.log('getBySlug called with:', slug);
     
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*, category:categories(*)')
+        .select(`
+          *,
+          category:categories(*),
+          variations:product_variations(*)
+        `)
         .eq('slug', slug)
         .single();
       
-      console.log('Supabase response:', { data, error }); // Debug log
+      console.log('Supabase response:', { data, error });
 
       if (error) {
         console.error('Supabase error:', error);
@@ -153,6 +160,46 @@ export const productService = {
       .from('products')
       .select('*')
       .eq('category_id', categoryId);
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateStock(id: string, quantity: number) {
+    const { data, error } = await supabase
+      .from('products')
+      .update({ stock: supabase.raw(`stock + ${quantity}`) })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateVariationStock(productId: string, variationName: string, quantity: number) {
+    const { data, error } = await supabase
+      .from('product_variations')
+      .update({ stock: supabase.raw(`stock + ${quantity}`) })
+      .eq('product_id', productId)
+      .eq('name', variationName)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getFeaturedProducts() {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(*),
+        variations:product_variations(*)
+      `)
+      .eq('is_featured', true)
+      .limit(8); // Limit to 8 products (4x2 grid)
     
     if (error) throw error;
     return data;

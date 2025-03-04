@@ -24,14 +24,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch stats and recent orders in parallel
-        const [statsData, recentOrders] = await Promise.all([
-          orderService.getStats(),
+        // Fetch all orders instead of just completed ones
+        const [orders, recentOrders] = await Promise.all([
+          orderService.getAll(), // Get all orders
           orderService.getRecent(5)
         ]);
 
+        const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
+        const uniqueCustomers = new Set(orders.map(order => order.email)).size;
+
         setStats({
-          ...statsData,
+          totalOrders: orders.length,
+          totalRevenue,
+          totalCustomers: uniqueCustomers,
           recentOrders
         });
       } catch (error) {

@@ -152,17 +152,17 @@ export default function AdminOrdersPage() {
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        className={`mt-1 px-2 py-1 rounded text-sm font-medium border-0
+                        className={`mt-1 px-2 py-1 rounded text-sm font-medium border-0 bg-zinc-900 text-white
                           ${order.status === 'completed' && 'bg-emerald-500/20 text-emerald-500'}
                           ${order.status === 'processing' && 'bg-blue-500/20 text-blue-500'}
                           ${order.status === 'pending' && 'bg-yellow-500/20 text-yellow-500'}
                           ${order.status === 'cancelled' && 'bg-red-500/20 text-red-500'}
                         `}
                       >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="pending" className="bg-zinc-900 text-white">Pending</option>
+                        <option value="processing" className="bg-zinc-900 text-white">Processing</option>
+                        <option value="completed" className="bg-zinc-900 text-white">Completed</option>
+                        <option value="cancelled" className="bg-zinc-900 text-white">Cancelled</option>
                       </select>
                     </div>
                   </div>

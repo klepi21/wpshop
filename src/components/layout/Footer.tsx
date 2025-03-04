@@ -55,9 +55,9 @@ export function Footer() {
             <h3 className="text-white font-bold text-lg">Contact</h3>
             <ul className="space-y-2">
               <li>
-                <a href="mailto:contact@woodenpunks.com" className="text-white/60 hover:text-white text-sm flex items-center gap-2">
+                <a href="mailto:wdpunks@gmail.com" className="text-white/60 hover:text-white text-sm flex items-center gap-2">
                   <Mail size={16} />
-                  contact@woodenpunks.com
+                  wdpunks@gmail.com
                 </a>
               </li>
             </ul>

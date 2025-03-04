@@ -36,7 +36,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     {/* Image */}
                     <div className="relative w-20 h-20">
                       <Image
-                        src={item.images[0]}
+                        src={item.image}
                         alt={item.name}
                         fill
                         className="object-cover rounded-lg"
@@ -46,7 +46,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     {/* Details */}
                     <div className="flex-1 bg-[#000000]">
                       <div className="flex justify-between bg-[#000000]">
-                        <h3 className="text-white">{item.name}</h3>
+                        <div>
+                          <h3 className="text-white">{item.name}</h3>
+                          {item.variation && (
+                            <p className="text-sm text-white/60">Size: {item.variation}</p>
+                          )}
+                        </div>
                         <button onClick={() => removeFromCart(item.id)}>
                           <X className="w-4 h-4 text-white/60" />
                         </button>

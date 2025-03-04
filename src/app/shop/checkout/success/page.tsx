@@ -29,9 +29,6 @@ export default function CheckoutSuccessPage() {
         <h1 className="text-3xl font-bold text-white mb-4">
           Order Confirmed!
         </h1>
-        <p className="text-white/80 mb-8 max-w-md mx-auto">
-          Thank you for your purchase. We'll send you an email with your order details and tracking information once your order ships.
-        </p>
         <Link
           href="/shop"
           className="inline-block bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black px-8 py-3 rounded-full font-medium hover:opacity-90 transition-opacity"

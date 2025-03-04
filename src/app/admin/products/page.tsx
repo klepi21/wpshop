@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Copy } from 'lucide-react';
 import { ProductModal } from '@/components/admin/ProductModal';
 import { productService } from '@/services/products';
 import { toast } from 'sonner';
@@ -42,6 +42,23 @@ export default function AdminProductsPage() {
       } catch (error) {
         toast.error('Failed to delete product');
       }
+    }
+  };
+
+  const handleDuplicate = async (product: any) => {
+    try {
+      const newProduct = {
+        ...product,
+        id: undefined,
+        name: `${product.name} (Copy)`,
+        created_at: undefined,
+        updated_at: undefined
+      };
+      await productService.create(newProduct);
+      toast.success('Product duplicated successfully');
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to duplicate product');
     }
   };
 
@@ -123,6 +140,13 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleDuplicate(product)}
+                      className="p-2 text-white/60 hover:text-white rounded-lg hover:bg-white/5"
+                      title="Duplicate product"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleEdit(product)}
                       className="p-2 text-white/60 hover:text-white rounded-lg hover:bg-white/5"

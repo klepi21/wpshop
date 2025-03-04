@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { ShareProduct } from '@/components/shop/ShareProduct';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ProductPage() {
   const { slug } = useParams();
@@ -20,6 +21,9 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
+  const [selectedVariation, setSelectedVariation] = useState<any>(null);
+  const [availableStock, setAvailableStock] = useState<number>(0);
+  const [customizationText, setCustomizationText] = useState<string>('');
 
   useEffect(() => {
     // Test connection first
@@ -44,6 +48,14 @@ export default function ProductPage() {
           if (data.category_id) {
             fetchRelatedProducts(data.category_id, data.id);
           }
+          // Set initial available stock based on whether the product has sizes
+          if (data.has_sizes) {
+            // Don't set initial stock for products with variations
+            // until a variation is selected
+            setAvailableStock(0);
+          } else {
+            setAvailableStock(data.stock);
+          }
         }
       } catch (error) {
         console.error('Failed to load product:', error);
@@ -55,6 +67,16 @@ export default function ProductPage() {
 
     loadProduct();
   }, [slug]);
+
+  // Update available stock when variation changes
+  useEffect(() => {
+    if (product?.has_sizes && selectedVariation) {
+      const variation = product.variations.find((v: any) => v.name === selectedVariation);
+      setAvailableStock(variation?.stock || 0);
+    } else {
+      setAvailableStock(product?.stock || 0);
+    }
+  }, [selectedVariation, product]);
 
   const fetchRelatedProducts = async (categoryId: string, currentProductId: string) => {
     try {
@@ -90,16 +112,21 @@ export default function ProductPage() {
   }
 
   const handleAddToCart = () => {
-    if (product.has_sizes && !selectedSize) {
+    if (product.has_sizes && !selectedVariation) {
       toast.error('Please select a size');
       return;
     }
     
-    addToCart(product, quantity, selectedSize);
+    if (quantity > availableStock) {
+      toast.error('Not enough stock available');
+      return;
+    }
+    
+    addToCart(product, quantity, selectedVariation, customizationText);
   };
 
   const incrementQuantity = () => {
-    if (quantity < Math.min(5, product.stock)) {
+    if (quantity < Math.min(5, availableStock)) {
       setQuantity(quantity + 1);
     }
   };
@@ -192,7 +219,7 @@ export default function ProductPage() {
                 <div className="flex items-center">
                   <button
                     onClick={decrementQuantity}
-                    disabled={quantity <= 1 || product.stock === 0}
+                    disabled={quantity <= 1 || availableStock === 0}
                     className="w-8 h-8 flex items-center justify-center rounded-l-lg bg-zinc-800 text-white hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Minus className="w-4 h-4" />
@@ -202,7 +229,7 @@ export default function ProductPage() {
                   </div>
                   <button
                     onClick={incrementQuantity}
-                    disabled={quantity >= Math.min(5, product.stock) || product.stock === 0}
+                    disabled={quantity >= Math.min(5, availableStock) || availableStock === 0}
                     className="w-8 h-8 flex items-center justify-center rounded-r-lg bg-zinc-800 text-white hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4" />
@@ -211,25 +238,47 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Size Selector - Moved up */}
+            {/* Size Variations */}
             {product.has_sizes && (
-              <div className="space-y-2 mb-4">
-                <label className="text-sm text-white">Size:</label>
-                <div className="flex flex-wrap gap-2">
-                  {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-lg border ${
-                        selectedSize === size 
-                          ? 'border-[#A67C52] bg-[#A67C52]/10 text-[#A67C52]' 
-                          : 'border-white/10 text-white/60 hover:border-white/20'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-white mb-2">Size:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variations?.map((variation: any) => (
+                      <button
+                        key={variation.name}
+                        onClick={() => {
+                          setSelectedVariation(variation.name);
+                          setAvailableStock(variation.stock);
+                        }}
+                        className={`px-6 py-3 rounded-lg border ${
+                          selectedVariation === variation.name
+                            ? 'border-[#A67C52] bg-[#A67C52]/10 text-[#A67C52]'
+                            : variation.stock > 0
+                            ? 'border-white/10 text-white/60 hover:border-white/20'
+                            : 'border-white/5 text-white/30 cursor-not-allowed'
+                        }`}
+                        disabled={variation.stock === 0}
+                      >
+                        <span className="text-sm font-medium">{variation.name}</span>
+                        {variation.stock === 0 && (
+                          <span className="block text-xs mt-1 text-white/30">(Out of Stock)</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Stock Display */}
+                {selectedVariation && (
+                  <div className="text-sm text-white/60">
+                    {availableStock > 0 ? (
+                      <span>{availableStock} in stock</span>
+                    ) : (
+                      <span className="text-red-500">Out of stock</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -243,14 +292,33 @@ export default function ProductPage() {
               )}
             </div>
 
+            {/* Customization Input */}
+            {product.has_customization && (
+              <div className="space-y-2">
+                <label htmlFor="customization" className="block text-sm font-medium text-white">
+                  Customization Details
+                </label>
+                <textarea
+                  id="customization"
+                  placeholder="Enter your customization details..."
+                  value={customizationText}
+                  onChange={(e) => setCustomizationText(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                    focus:ring-[#A67C52] focus:border-transparent min-h-[100px]
+                    hover:bg-white/[0.15] transition-colors"
+                />
+              </div>
+            )}
+
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={availableStock === 0}
               className={`w-full bg-gradient-to-r from-[#A67C52] to-[#D4B08C] text-black px-6 py-2.5 rounded-lg text-sm font-medium transition-opacity mt-4
-                ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
+                ${availableStock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
             >
-              {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {availableStock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </motion.button>
           </div>
 

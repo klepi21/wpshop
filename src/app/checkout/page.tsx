@@ -50,12 +50,6 @@ const PAYMENT_TOKENS = [
     imageUrl: 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
   },
   {
-    identifier: 'RARE-99e8b0',
-    name: 'RARE Token',
-    ticker: 'RARE',
-    imageUrl: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg'
-  },
-  {
     identifier: 'USDC-c76f1f',
     name: 'USD Coin',
     ticker: 'USDC',
@@ -132,8 +126,8 @@ export default function CheckoutPage() {
         const egldResponse = await fetch('https://api.multiversx.com/economics');
         const egldData = await egldResponse.json();
 
-        // Get token prices from API
-        const response = await fetch('https://api.multiversx.com/tokens?identifiers=RARE-99e8b0,USDC-c76f1f');
+        // Get token prices from API - only USDC now
+        const response = await fetch('https://api.multiversx.com/tokens?identifiers=USDC-c76f1f');
         const tokenData = await response.json();
 
         // Create a map of token data
@@ -222,7 +216,9 @@ export default function CheckoutPage() {
         items: items.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price
+          unit_price: item.price,
+          variation: item.variation,
+          customization: item.customization
         }))
       };
 
@@ -234,10 +230,7 @@ export default function CheckoutPage() {
 
       // Convert to base denomination based on token decimals
       let baseAmount;
-      if (selectedToken.identifier === 'RARE-99e8b0') {
-        // RARE: 18 decimals
-        baseAmount = Math.floor(Number(tokenAmount) * Math.pow(10, 18));
-      } else if (selectedToken.identifier === 'USDC-c76f1f') {
+      if (selectedToken.identifier === 'USDC-c76f1f') {
         // USDC: 6 decimals
         baseAmount = Math.floor(Number(tokenAmount) * Math.pow(10, 6));
       } else {
@@ -512,7 +505,7 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex gap-4 py-4 border-b border-white/10 last:border-0">
                     <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                       <Image
-                        src={item.images[0]}
+                        src={item.image}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -520,8 +513,13 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-white font-medium">{item.name}</h3>
-                      {item.selectedSize && (
-                        <p className="text-white/60 text-sm">Size: {item.selectedSize}</p>
+                      {item.variation && (
+                        <p className="text-white/60 text-sm">Size: {item.variation}</p>
+                      )}
+                      {item.customization && (
+                        <p className="text-white/60 text-sm mt-1">
+                          <span className="font-medium">Customization:</span> {item.customization}
+                        </p>
                       )}
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-white/60 text-sm">Qty: {item.quantity}</p>
