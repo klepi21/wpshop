@@ -167,11 +167,10 @@ export const productService = {
 
   async updateStock(id: string, quantity: number) {
     const { data, error } = await supabase
-      .from('products')
-      .update({ stock: supabase.raw(`stock + ${quantity}`) })
-      .eq('id', id)
-      .select()
-      .single();
+      .rpc('update_product_stock', {
+        p_id: id,
+        p_quantity: quantity
+      });
 
     if (error) throw error;
     return data;
@@ -179,12 +178,11 @@ export const productService = {
 
   async updateVariationStock(productId: string, variationName: string, quantity: number) {
     const { data, error } = await supabase
-      .from('product_variations')
-      .update({ stock: supabase.raw(`stock + ${quantity}`) })
-      .eq('product_id', productId)
-      .eq('name', variationName)
-      .select()
-      .single();
+      .rpc('update_variation_stock', {
+        p_product_id: productId,
+        p_variation_name: variationName,
+        p_quantity: quantity
+      });
 
     if (error) throw error;
     return data;
