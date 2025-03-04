@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
 import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { ShareProduct } from '@/components/shop/ShareProduct';
 import { ProductCard } from '@/components/shop/ProductCard';
-import { Textarea } from "@/components/ui/textarea";
 
 export default function ProductPage() {
   const { slug } = useParams();
