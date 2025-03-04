@@ -23,7 +23,7 @@ export function MarqueeDemo() {
             </div>
           ))}
         </div>
-      </Marquee>
+    </Marquee>
     </div>
   );
 } 

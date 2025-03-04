@@ -138,8 +138,17 @@ export default function ReceiptPage() {
                       </div>
                     )}
                     <div>
-                      <p className="text-white font-medium">{item.product?.name}</p>
+                      <p className="text-white font-medium">{item.product?.name}
+                        {item.selected_size && (
+                          <span className="text-white/60 ml-2">- Size: {item.selected_size}</span>
+                        )}
+                      </p>
                       <p className="text-white/60">Quantity: {item.quantity}</p>
+                      {item.customization && (
+                        <p className="text-white/60 text-sm mt-1">
+                          <span className="font-medium">Customization:</span> {item.customization}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <p className="text-white">${(item.unit_price * item.quantity).toFixed(2)}</p>

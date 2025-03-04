@@ -10,7 +10,11 @@ export const orderService = {
       .select(`
         *,
         order_items (
-          *,
+          id,
+          quantity,
+          unit_price,
+          selected_size,
+          customization,
           product:products (*)
         )
       `)
@@ -26,7 +30,11 @@ export const orderService = {
       .select(`
         *,
         order_items (
-          *,
+          id,
+          quantity,
+          unit_price,
+          selected_size,
+          customization,
           product:products (*)
         )
       `)
@@ -82,22 +90,6 @@ export const orderService = {
       .single();
 
     if (error) throw error;
-
-    // Create order items
-    const orderItems = orderData.items.map((item: any) => ({
-      order_id: data.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      selected_size: item.selected_size
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
-
     return data;
   },
 
@@ -119,7 +111,11 @@ export const orderService = {
       .select(`
         *,
         order_items (
-          *,
+          id,
+          quantity,
+          unit_price,
+          selected_size,
+          customization,
           product:products (*)
         )
       `)
@@ -136,7 +132,11 @@ export const orderService = {
       .select(`
         *,
         order_items (
-          *,
+          id,
+          quantity,
+          unit_price,
+          selected_size,
+          customization,
           product:products (*)
         )
       `)
@@ -194,5 +194,13 @@ export const orderService = {
     
     if (error) throw error;
     return data;
+  },
+
+  async createOrderItems(items: any[]) {
+    const { error } = await supabase
+      .from('order_items')
+      .insert(items);
+    
+    if (error) throw error;
   }
 }; 

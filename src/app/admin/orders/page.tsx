@@ -186,6 +186,11 @@ export default function AdminOrdersPage() {
                         </h3>
                         <p className="text-white/60 text-sm">Quantity: {item.quantity}</p>
                         <p className="text-white/60 text-sm">Price: ${item.unit_price}</p>
+                        {item.customization && (
+                          <p className="text-white/60 text-sm mt-1">
+                            <span className="font-medium">Customization:</span> {item.customization}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}

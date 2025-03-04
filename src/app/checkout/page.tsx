@@ -199,7 +199,7 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      // Create a pending order first
+      // Create the order first without items
       const orderData = {
         full_name: shippingDetails.name,
         email: shippingDetails.email,
@@ -212,17 +212,25 @@ export default function CheckoutPage() {
         status: 'pending',
         total_amount: getTotalWithShipping(),
         shipping_method: shippingMethod,
-        wallet_address: address,
-        items: items.map(item => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          unit_price: item.price,
-          variation: item.variation,
-          customization: item.customization
-        }))
+        wallet_address: address
       };
 
+      // Create the order
       const order = await orderService.create(orderData);
+      
+      // Then create order items
+      const orderItemsData = items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        unit_price: item.price,
+        selected_size: item.variation || null,
+        customization: item.customization || null
+      }));
+
+      // Create order items
+      await orderService.createOrderItems(orderItemsData);
+
       setOrderId(order.id);
 
       const tokenAmount = getTokenAmount(selectedToken);
@@ -299,7 +307,7 @@ export default function CheckoutPage() {
       if (orderId) {
         await orderService.updateStatus(orderId, 'cancelled');
       }
-      toast.error(error instanceof Error ? error.message : 'Payment failed. Please try again.');
+      toast.error('Payment failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }

@@ -164,6 +164,11 @@ export default function UserOrdersPage() {
                               </h4>
                               <p className="text-white/60 text-sm">Quantity: {item.quantity}</p>
                               <p className="text-white/60 text-sm">Price: ${item.unit_price}</p>
+                              {item.customization && (
+                                <p className="text-white/60 text-sm mt-1">
+                                  <span className="font-medium">Customization:</span> {item.customization}
+                                </p>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-white font-medium">
