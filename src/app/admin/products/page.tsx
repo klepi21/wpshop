@@ -54,6 +54,7 @@ export default function AdminProductsPage() {
         ...productFields,
         id: undefined,
         name: `${product.name} (Copy)`,
+        slug: productService.generateSlug(`${product.name} (Copy)`),
         created_at: undefined,
         updated_at: undefined,
         variations: existingVariations?.map((v: any) => ({
