@@ -704,6 +704,18 @@ export default function CheckoutPage() {
                     <span>Amount in {selectedToken.ticker}</span>
                     <span>{getTokenAmount(selectedToken)} {selectedToken.ticker}</span>
                   </div>
+
+                  {/* Customs & VAT Information Button */}
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomsModalOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-white/80 hover:text-white bg-zinc-900/50 border border-white/10 rounded-lg transition-colors hover:border-white/20"
+                    >
+                      <Info size={16} />
+                      View Customs & VAT Information
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

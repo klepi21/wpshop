@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { orderService } from '@/services/orders';
 import { productService } from '@/services/products';
