@@ -7,7 +7,11 @@ export const productService = {
   async getAll() {
     const { data, error } = await supabase
       .from('products')
-      .select('*, category:categories(*)');
+      .select(`
+        *,
+        category:categories(*),
+        variations:product_variations(*)
+      `);
     
     if (error) throw error;
     return data;

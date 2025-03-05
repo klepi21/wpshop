@@ -52,12 +52,17 @@ export default function AdminProductsPage() {
         id: undefined,
         name: `${product.name} (Copy)`,
         created_at: undefined,
-        updated_at: undefined
+        updated_at: undefined,
+        variations: product.variations?.map((v: any) => ({
+          name: v.name,
+          stock: v.stock
+        })) || []
       };
       await productService.create(newProduct);
       toast.success('Product duplicated successfully');
       fetchProducts();
     } catch (error) {
+      console.error('Failed to duplicate product:', error);
       toast.error('Failed to duplicate product');
     }
   };
