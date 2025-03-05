@@ -47,17 +47,21 @@ export default function AdminProductsPage() {
 
   const handleDuplicate = async (product: any) => {
     try {
+      // Extract only the direct product fields, excluding joined data
+      const { category, variations: existingVariations, ...productFields } = product;
+      
       const newProduct = {
-        ...product,
+        ...productFields,
         id: undefined,
         name: `${product.name} (Copy)`,
         created_at: undefined,
         updated_at: undefined,
-        variations: product.variations?.map((v: any) => ({
+        variations: existingVariations?.map((v: any) => ({
           name: v.name,
           stock: v.stock
         })) || []
       };
+      
       await productService.create(newProduct);
       toast.success('Product duplicated successfully');
       fetchProducts();
