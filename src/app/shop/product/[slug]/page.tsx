@@ -206,12 +206,14 @@ export default function ProductPage() {
           <div className="space-y-4">
             {/* Availability and Quantity in same row */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-white">Availability:</span>
-                <span className={`text-sm ${product.stock > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                </span>
-              </div>
+              {!product.has_sizes && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-white">Availability:</span>
+                  <span className={`text-sm ${product.stock > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <label className="text-sm text-white">Quantity:</label>
@@ -249,6 +251,10 @@ export default function ProductPage() {
                         onClick={() => {
                           setSelectedVariation(variation.name);
                           setAvailableStock(variation.stock);
+                          // Reset quantity when changing variation if it exceeds new stock
+                          if (quantity > variation.stock) {
+                            setQuantity(1);
+                          }
                         }}
                         className={`px-6 py-3 rounded-lg border ${
                           selectedVariation === variation.name
@@ -268,7 +274,7 @@ export default function ProductPage() {
                   </div>
                 </div>
 
-                {/* Stock Display */}
+                {/* Stock Display for Selected Variation */}
                 {selectedVariation && (
                   <div className="text-sm text-white/60">
                     {availableStock > 0 ? (
