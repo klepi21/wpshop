@@ -111,6 +111,7 @@ export default function CheckoutPage() {
           console.error('Error updating order status:', error);
         }
       }
+    }
   });
 
   useEffect(() => {
@@ -342,19 +343,18 @@ export default function CheckoutPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Checkout</h1>
       
-      <button
-        type="button"
-        onClick={() => setIsCustomsModalOpen(true)}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors absolute top-24 right-4"
-      >
-        <Info size={18} />
-        View Customs & VAT Information
-      </button>
-      
       {/* Order Summary Section */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Order Summary</h2>
+          <button
+            type="button"
+            onClick={() => setIsCustomsModalOpen(true)}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <Info size={18} />
+            View Customs & VAT Information
+          </button>
         </div>
         
         {/* Rest of the order summary content */}
@@ -716,6 +716,7 @@ export default function CheckoutPage() {
         status={transactionStatus}
       />
 
+      {/* Customs Info Modal */}
       <CustomsInfoModal
         isOpen={isCustomsModalOpen}
         onClose={() => setIsCustomsModalOpen(false)}
