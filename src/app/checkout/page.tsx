@@ -16,10 +16,9 @@ import { Label } from "@/components/ui/label";
 import { useId } from "react";
 import { orderService } from '@/services/orders';
 import { Dialog } from '@headlessui/react';
-import { CheckCircle2, Info } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useTrackTransactionStatus } from '@multiversx/sdk-dapp/hooks/transactions/useTrackTransactionStatus';
 import { TransactionModal } from '@/components/modals/TransactionModal';
-import { CustomsInfoModal } from '@/components/shop/CustomsInfoModal';
 
 interface ShippingDetails {
   name: string;
@@ -80,7 +79,6 @@ export default function CheckoutPage() {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'failed' | null>(null);
   const [currentTxHash, setCurrentTxHash] = useState<string | null>(null);
-  const [isCustomsModalOpen, setIsCustomsModalOpen] = useState(false);
 
   const { isPending, isSuccessful, isFailed, status } = useTrackTransactionStatus({
     transactionId: currentTxHash,
@@ -340,398 +338,281 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Checkout</h1>
-      
-      {/* Order Summary Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Order Summary</h2>
-          <button
-            type="button"
-            onClick={() => setIsCustomsModalOpen(true)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <Info size={18} />
-            View Customs & VAT Information
-          </button>
-        </div>
-        
-        {/* Rest of the order summary content */}
-        {items.map((item) => (
-          <div key={item.id} className="flex gap-4 py-4 border-b border-gray-200 last:border-0">
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              <Image
-                src={item.image}
-                alt={item.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-gray-900 font-medium">{item.name}</h3>
-              {item.variation && (
-                <p className="text-gray-600 text-sm">Size: {item.variation}</p>
-              )}
-              {item.customization && (
-                <p className="text-gray-600 text-sm mt-1">
-                  <span className="font-medium">Customization:</span> {item.customization}
-                </p>
-              )}
-              <div className="flex justify-between items-center mt-2">
-                <p className="text-gray-600 text-sm">Qty: {item.quantity}</p>
-                <p className="text-gray-900 font-medium">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {/* Shipping method selection */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">Shipping Method</h3>
-          <RadioGroup
-            value={shippingMethod}
-            onValueChange={(value: 'simple' | 'fast') => setShippingMethod(value)}
-            className="flex flex-col gap-4"
-          >
-            <div className="relative flex w-full items-start gap-2 rounded-lg border border-gray-200 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-              <RadioGroupItem
-                value="simple"
-                className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-              />
-              <div className="grid grow gap-2">
-                <Label className="text-gray-900">
-                  Simple Shipping
-                  <span className="text-xs font-normal leading-[inherit] text-gray-600 ml-2">
-                    (Free)
-                  </span>
-                </Label>
-                <p className="text-xs text-gray-600">
-                  Standard delivery within 5-7 business days
-                </p>
-              </div>
-            </div>
-            <div className="relative flex w-full items-start gap-2 rounded-lg border border-gray-200 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-              <RadioGroupItem
-                value="fast"
-                className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-              />
-              <div className="grid grow gap-2">
-                <Label className="text-gray-900">
-                  Fast Shipping
-                  <span className="text-xs font-normal leading-[inherit] text-gray-600 ml-2">
-                    ($20.00)
-                  </span>
-                </Label>
-                <p className="text-xs text-gray-600">
-                  Express delivery within 2-3 business days
-                </p>
-              </div>
-            </div>
-          </RadioGroup>
-        </div>
+    <div className="min-h-screen py-20 px-4">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-white mb-8">Checkout</h1>
 
-        {/* Total amount */}
-        <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between items-center text-lg font-semibold">
-            <span>Total (including shipping):</span>
-            <span>${getTotalWithShipping().toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Rest of the checkout form */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Billing & Delivery Information Form */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-white">Billing & Delivery Information</h2>
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit(e);
-            }} 
-            className="space-y-4"
-          >
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                  text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                  focus:ring-[#A67C52] focus:border-transparent
-                  hover:bg-white/[0.15] transition-colors"
-                placeholder="Enter your full name"
-                value={shippingDetails.name}
-                onChange={(e) => setShippingDetails(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                  text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                  focus:ring-[#A67C52] focus:border-transparent
-                  hover:bg-white/[0.15] transition-colors"
-                placeholder="Enter your email"
-                value={shippingDetails.email}
-                onChange={(e) => setShippingDetails(prev => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-white mb-1">
-                Shipping Address
-              </label>
-              <textarea
-                id="address"
-                name="address"
-                required
-                rows={3}
-                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                  text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                  focus:ring-[#A67C52] focus:border-transparent
-                  hover:bg-white/[0.15] transition-colors resize-none"
-                placeholder="Enter your shipping address"
-                value={shippingDetails.address}
-                onChange={(e) => setShippingDetails(prev => ({ ...prev, address: e.target.value }))}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-white mb-1">
-                  City
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  required
-                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                    focus:ring-[#A67C52] focus:border-transparent
-                    hover:bg-white/[0.15] transition-colors"
-                  placeholder="Enter your city"
-                  value={shippingDetails.city}
-                  onChange={(e) => setShippingDetails(prev => ({ ...prev, city: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium text-white mb-1">
-                  Postal Code
-                </label>
-                <input
-                  type="text"
-                  id="postalCode"
-                  required
-                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                    focus:ring-[#A67C52] focus:border-transparent
-                    hover:bg-white/[0.15] transition-colors"
-                  placeholder="Enter postal code"
-                  value={shippingDetails.postalCode}
-                  onChange={(e) => setShippingDetails(prev => ({ ...prev, postalCode: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="country" className="block text-sm font-medium text-white mb-1">
-                Country
-              </label>
-              <input
-                type="text"
-                id="country"
-                required
-                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                  text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                  focus:ring-[#A67C52] focus:border-transparent
-                  hover:bg-white/[0.15] transition-colors"
-                placeholder="Enter your country"
-                value={shippingDetails.country}
-                onChange={(e) => setShippingDetails(prev => ({ ...prev, country: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-4 mt-6">
-              <label className="block text-sm font-medium text-white mb-2">
-                Select Payment Token
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {tokens.map((token) => (
-                  <button
-                    key={token.identifier}
-                    type="button"
-                    onClick={() => setSelectedToken(token)}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors
-                      ${selectedToken?.identifier === token.identifier 
-                        ? 'border-[#A67C52] bg-[#A67C52]/10 text-[#A67C52]' 
-                        : 'border-white/10 hover:border-[#A67C52]/50 text-white'}`}
-                  >
-                    <Image
-                      src={token.imageUrl || token.assets?.svgUrl || token.assets?.pngUrl || ''}
-                      alt={token.name}
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                    />
-                    <span className="font-medium">{token.ticker}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isProcessing || !selectedToken}
-              className="w-full py-3 bg-[#A67C52] text-white font-medium rounded-xl 
-                hover:bg-[#A67C52]/90 transition-colors disabled:opacity-50 mt-4"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Billing & Delivery Information Form */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-white">Billing & Delivery Information</h2>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(e);
+              }} 
+              className="space-y-4"
             >
-              {isProcessing ? 'Processing...' : `Pay with ${selectedToken?.ticker || ''}`}
-            </button>
-          </form>
-        </div>
-
-        {/* Order Summary */}
-        <div className="space-y-6">
-          <div className="bg-zinc-950 border border-white/10 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Order Summary</h2>
-            <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="flex gap-4 py-4 border-b border-white/10 last:border-0">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium">{item.name}</h3>
-                    {item.variation && (
-                      <p className="text-white/60 text-sm">Size: {item.variation}</p>
-                    )}
-                    {item.customization && (
-                      <p className="text-white/60 text-sm mt-1">
-                        <span className="font-medium">Customization:</span> {item.customization}
-                      </p>
-                    )}
-                    <div className="flex justify-between items-center mt-2">
-                      <p className="text-white/60 text-sm">Qty: {item.quantity}</p>
-                      <p className="text-[#A67C52] font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Shipping Method Selection */}
-              <div className="mb-6">
-                <h3 className="text-white font-medium mb-4">Shipping Method</h3>
-                <RadioGroup 
-                  className="gap-2" 
-                  defaultValue="simple"
-                  value={shippingMethod}
-                  onValueChange={(value) => setShippingMethod(value as 'simple' | 'fast')}
-                >
-                  <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-                    <RadioGroupItem
-                      value="simple"
-                      className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-                    />
-                    <div className="grid grow gap-2">
-                      <Label className="text-white">
-                        Simple Shipping
-                        <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
-                          (Free)
-                        </span>
-                      </Label>
-                      <p className="text-xs text-white/60">
-                        Standard delivery within 5-7 business days
-                      </p>
-                    </div>
-                  </div>
-                  <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-                    <RadioGroupItem
-                      value="fast"
-                      className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-                    />
-                    <div className="grid grow gap-2">
-                      <Label className="text-white">
-                        Fast Shipping
-                        <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
-                          ($20.00)
-                        </span>
-                      </Label>
-                      <p className="text-xs text-white/60">
-                        Express delivery within 2-3 business days
-                      </p>
-                    </div>
-                  </div>
-                </RadioGroup>
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                    focus:ring-[#A67C52] focus:border-transparent
+                    hover:bg-white/[0.15] transition-colors"
+                  placeholder="Enter your full name"
+                  value={shippingDetails.name}
+                  onChange={(e) => setShippingDetails(prev => ({ ...prev, name: e.target.value }))}
+                />
               </div>
 
-              {selectedToken && (
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <div className="flex justify-between text-[#A67C52]/80 mb-2">
-                    <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[#A67C52]/80 mb-2">
-                    <span>Shipping</span>
-                    <span>{shippingMethod === 'fast' ? '$20.00' : 'Free'}</span>
-                  </div>
-                  <div className="flex justify-between text-[#A67C52] font-medium mb-2">
-                    <span>Total in USD</span>
-                    <span>${getTotalWithShipping().toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[#A67C52] font-medium">
-                    <span>Amount in {selectedToken.ticker}</span>
-                    <span>{getTokenAmount(selectedToken)} {selectedToken.ticker}</span>
-                  </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                    focus:ring-[#A67C52] focus:border-transparent
+                    hover:bg-white/[0.15] transition-colors"
+                  placeholder="Enter your email"
+                  value={shippingDetails.email}
+                  onChange={(e) => setShippingDetails(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
 
-                  {/* Customs & VAT Information Button */}
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <button
-                      type="button"
-                      onClick={() => setIsCustomsModalOpen(true)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-white/80 hover:text-white bg-zinc-900/50 border border-white/10 rounded-lg transition-colors hover:border-white/20"
-                    >
-                      <Info size={16} />
-                      View Customs & VAT Information
-                    </button>
-                  </div>
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-white mb-1">
+                  Shipping Address
+                </label>
+                <textarea
+                  id="address"
+                  name="address"
+                  required
+                  rows={3}
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                    focus:ring-[#A67C52] focus:border-transparent
+                    hover:bg-white/[0.15] transition-colors resize-none"
+                  placeholder="Enter your shipping address"
+                  value={shippingDetails.address}
+                  onChange={(e) => setShippingDetails(prev => ({ ...prev, address: e.target.value }))}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-white mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    id="city"
+                    required
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                      text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                      focus:ring-[#A67C52] focus:border-transparent
+                      hover:bg-white/[0.15] transition-colors"
+                    placeholder="Enter your city"
+                    value={shippingDetails.city}
+                    onChange={(e) => setShippingDetails(prev => ({ ...prev, city: e.target.value }))}
+                  />
                 </div>
-              )}
+                <div>
+                  <label htmlFor="postalCode" className="block text-sm font-medium text-white mb-1">
+                    Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    id="postalCode"
+                    required
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                      text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                      focus:ring-[#A67C52] focus:border-transparent
+                      hover:bg-white/[0.15] transition-colors"
+                    placeholder="Enter postal code"
+                    value={shippingDetails.postalCode}
+                    onChange={(e) => setShippingDetails(prev => ({ ...prev, postalCode: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-white mb-1">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  id="country"
+                  required
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                    focus:ring-[#A67C52] focus:border-transparent
+                    hover:bg-white/[0.15] transition-colors"
+                  placeholder="Enter your country"
+                  value={shippingDetails.country}
+                  onChange={(e) => setShippingDetails(prev => ({ ...prev, country: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-4 mt-6">
+                <label className="block text-sm font-medium text-white mb-2">
+                  Select Payment Token
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {tokens.map((token) => (
+                    <button
+                      key={token.identifier}
+                      type="button"
+                      onClick={() => setSelectedToken(token)}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors
+                        ${selectedToken?.identifier === token.identifier 
+                          ? 'border-[#A67C52] bg-[#A67C52]/10 text-[#A67C52]' 
+                          : 'border-white/10 hover:border-[#A67C52]/50 text-white'}`}
+                    >
+                      <Image
+                        src={token.imageUrl || token.assets?.svgUrl || token.assets?.pngUrl || ''}
+                        alt={token.name}
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                      <span className="font-medium">{token.ticker}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isProcessing || !selectedToken}
+                className="w-full py-3 bg-[#A67C52] text-white font-medium rounded-xl 
+                  hover:bg-[#A67C52]/90 transition-colors disabled:opacity-50 mt-4"
+              >
+                {isProcessing ? 'Processing...' : `Pay with ${selectedToken?.ticker || ''}`}
+              </button>
+            </form>
+          </div>
+
+          {/* Order Summary */}
+          <div className="space-y-6">
+            <div className="bg-zinc-950 border border-white/10 rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">Order Summary</h2>
+              <div className="space-y-4">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-4 py-4 border-b border-white/10 last:border-0">
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white font-medium">{item.name}</h3>
+                      {item.variation && (
+                        <p className="text-white/60 text-sm">Size: {item.variation}</p>
+                      )}
+                      {item.customization && (
+                        <p className="text-white/60 text-sm mt-1">
+                          <span className="font-medium">Customization:</span> {item.customization}
+                        </p>
+                      )}
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-white/60 text-sm">Qty: {item.quantity}</p>
+                        <p className="text-[#A67C52] font-medium">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Shipping Method Selection */}
+                <div className="mb-6">
+                  <h3 className="text-white font-medium mb-4">Shipping Method</h3>
+                  <RadioGroup 
+                    className="gap-2" 
+                    defaultValue="simple"
+                    value={shippingMethod}
+                    onValueChange={(value) => setShippingMethod(value as 'simple' | 'fast')}
+                  >
+                    <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
+                      <RadioGroupItem
+                        value="simple"
+                        className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
+                      />
+                      <div className="grid grow gap-2">
+                        <Label className="text-white">
+                          Simple Shipping
+                          <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
+                            (Free)
+                          </span>
+                        </Label>
+                        <p className="text-xs text-white/60">
+                          Standard delivery within 5-7 business days
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
+                      <RadioGroupItem
+                        value="fast"
+                        className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
+                      />
+                      <div className="grid grow gap-2">
+                        <Label className="text-white">
+                          Fast Shipping
+                          <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
+                            ($20.00)
+                          </span>
+                        </Label>
+                        <p className="text-xs text-white/60">
+                          Express delivery within 2-3 business days
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {selectedToken && (
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <div className="flex justify-between text-[#A67C52]/80 mb-2">
+                      <span>Subtotal</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[#A67C52]/80 mb-2">
+                      <span>Shipping</span>
+                      <span>{shippingMethod === 'fast' ? '$20.00' : 'Free'}</span>
+                    </div>
+                    <div className="flex justify-between text-[#A67C52] font-medium mb-2">
+                      <span>Total in USD</span>
+                      <span>${getTotalWithShipping().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[#A67C52] font-medium">
+                      <span>Amount in {selectedToken.ticker}</span>
+                      <span>{getTokenAmount(selectedToken)} {selectedToken.ticker}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-
       <TransactionModal 
         isOpen={showTransactionModal}
         status={transactionStatus}
-      />
-
-      {/* Customs Info Modal */}
-      <CustomsInfoModal
-        isOpen={isCustomsModalOpen}
-        onClose={() => setIsCustomsModalOpen(false)}
       />
     </div>
   );
