@@ -50,7 +50,7 @@ const faqItems = [
     id: "faq-7",
     question: "Do you offer custom designs?",
     answer:
-      "Yes! We specialize in custom wooden designs. Contact us with your ideas, and we'll work together to create something unique. Custom orders may require additional processing time.",
+    "Yes! We specialize in custom wooden designs and offer a variety of Custom Add-Ons to personalize your item. If you don’t see what you’re looking for or have a unique customization idea, Contact Us—we’re happy to discuss and bring your vision to life!"
   },
   {
     id: "faq-8",
