@@ -67,7 +67,7 @@ const Faq3 = ({
   supportHeading = "Need Additional Help?",
   supportDescription = "Our team is here to assist you with any questions about our wooden creations or your order. We typically respond within 24 hours.",
   supportButtonText = "Contact Us",
-  supportButtonUrl = "mailto:contact@woodenpunks.com",
+  supportButtonUrl = "mailto:wdpunks@gmail.com",
 }: Faq3Props) => {
   return (
     <section className="py-32">

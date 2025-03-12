@@ -86,7 +86,7 @@ export default function HomePage() {
         supportHeading="Still have questions?"
         supportDescription="Our team is passionate about what we do and we're always happy to help you with any questions about our products or services."
         supportButtonText="Get in Touch"
-        supportButtonUrl="mailto:contact@woodenpunks.com"
+        supportButtonUrl="mailto:wdpunks@gmail.com"
       />
 
       {/* Partners Section */}
