@@ -29,25 +29,42 @@ export function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-white font-bold text-lg">Quick Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-white/60 hover:text-white text-sm">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop" className="text-white/60 hover:text-white text-sm">
-                  Shop
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-white/60 hover:text-white text-sm">
-                  About Us
-                </Link>
-              </li>
-            </ul>
+          <div className="flex space-x-8">
+            <div className="space-y-4">
+              <h3 className="text-white font-bold text-lg">Quick Links</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/" className="text-white/60 hover:text-white text-sm">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/shop" className="text-white/60 hover:text-white text-sm">
+                    Shop
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="text-white/60 hover:text-white text-sm">
+                    About Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-white font-bold text-lg">More</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="https://woodenpunks.com/partnerships" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white text-sm">
+                    Partnerships
+                  </a>
+                </li>
+                <li>
+                  <a href="https://woodenpunks.com/vault" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white text-sm">
+                  Vault
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
 
           {/* Contact */}
