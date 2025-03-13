@@ -13,6 +13,7 @@ import { getChainID } from '@multiversx/sdk-dapp/utils/network';
 import { WalletButton } from '@/components/wallet/WalletButton';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useId } from "react";
 import { orderService } from '@/services/orders';
 import { Dialog } from '@headlessui/react';
@@ -58,6 +59,31 @@ const PAYMENT_TOKENS = [
   }
 ];
 
+// Product type shipping costs
+const SHIPPING_COSTS = {
+  SUNGLASSES: { USA: 13.50, INTERNATIONAL: 24.00 },
+  KEYCHAINS: { USA: 10.00, INTERNATIONAL: 22.50 },
+  HOODIES: { USA: 0.00, INTERNATIONAL: 0.00 }, // Free shipping
+  COASTERS: { USA: 13.50, INTERNATIONAL: 24.00 }
+};
+
+// Product categories to types mapping
+const PRODUCT_TYPE_MAPPING = {
+  'sunglasses': 'SUNGLASSES',
+  'glasses': 'SUNGLASSES',
+  'eyewear': 'SUNGLASSES',
+  'keychain': 'KEYCHAINS',
+  'keyring': 'KEYCHAINS',
+  'key holder': 'KEYCHAINS',
+  'hoodie': 'HOODIES',
+  'sweatshirt': 'HOODIES',
+  'apparel': 'HOODIES',
+  'clothing': 'HOODIES',
+  'coaster': 'COASTERS',
+  'drink': 'COASTERS',
+  'cup holder': 'COASTERS',
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, clearCart } = useCart();
@@ -81,6 +107,9 @@ export default function CheckoutPage() {
   const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'failed' | null>(null);
   const [currentTxHash, setCurrentTxHash] = useState<string | null>(null);
   const [isCustomsModalOpen, setIsCustomsModalOpen] = useState(false);
+  const [isUSA, setIsUSA] = useState(true);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [productTypes, setProductTypes] = useState<string[]>([]);
 
   const { isPending, isSuccessful, isFailed, status } = useTrackTransactionStatus({
     transactionId: currentTxHash,
@@ -175,6 +204,64 @@ export default function CheckoutPage() {
     fetchTokens();
   }, []);
 
+  // Determine product types and calculate shipping
+  useEffect(() => {
+    // Extract product types from items in cart
+    const types: string[] = [];
+    
+    items.forEach(item => {
+      // Try to determine product type from name
+      let foundType = '';
+      
+      // Check name for keywords
+      const nameLower = item.name.toLowerCase();
+      
+      Object.entries(PRODUCT_TYPE_MAPPING).forEach(([keyword, typeName]) => {
+        if (nameLower.includes(keyword)) {
+          foundType = typeName;
+        }
+      });
+      
+      // If we couldn't determine the type, use SUNGLASSES as default (highest shipping cost)
+      if (!foundType) {
+        foundType = 'SUNGLASSES';
+        console.log(`Couldn't determine type for "${item.name}", using default: SUNGLASSES`);
+      }
+      
+      // If we found a type and it's not already in our list, add it
+      if (foundType && !types.includes(foundType)) {
+        types.push(foundType);
+      }
+    });
+    
+    console.log('Detected product types:', types);
+    setProductTypes(types);
+    
+    // Update shipping cost whenever product types or country changes
+    calculateShippingCost(types);
+  }, [items, isUSA]);
+  
+  // Calculate shipping cost based on product types and country
+  const calculateShippingCost = (types: string[]) => {
+    if (types.length === 0) {
+      setShippingCost(0);
+      return;
+    }
+    
+    // Calculate shipping costs for each product type
+    const costs = types.map(type => {
+      const costObj = SHIPPING_COSTS[type as keyof typeof SHIPPING_COSTS];
+      if (!costObj) return 0;
+      
+      return isUSA ? costObj.USA : costObj.INTERNATIONAL;
+    });
+    
+    // Use the highest shipping cost
+    const highestCost = Math.max(...costs);
+    console.log('Shipping costs by type:', costs, 'Highest cost:', highestCost);
+    setShippingCost(highestCost);
+  };
+
   // Calculate token amount based on USD total
   const getTokenAmount = (token: Token) => {
     if (!token.price || token.price <= 0) return '0';
@@ -189,7 +276,7 @@ export default function CheckoutPage() {
   };
 
   const getTotalWithShipping = () => {
-    return total + (shippingMethod === 'fast' ? 20 : 0);
+    return total + shippingCost;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,7 +301,8 @@ export default function CheckoutPage() {
         status: 'pending',
         total_amount: getTotalWithShipping(),
         shipping_method: shippingMethod,
-        wallet_address: address
+        wallet_address: address,
+        shipping_cost: shippingCost,
       };
 
       // Create the order
@@ -462,18 +550,42 @@ export default function CheckoutPage() {
                 <label htmlFor="country" className="block text-sm font-medium text-white mb-1">
                   Country
                 </label>
-                <input
-                  type="text"
-                  id="country"
-                  required
-                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                    focus:ring-[#A67C52] focus:border-transparent
-                    hover:bg-white/[0.15] transition-colors"
-                  placeholder="Enter your country"
-                  value={shippingDetails.country}
-                  onChange={(e) => setShippingDetails(prev => ({ ...prev, country: e.target.value }))}
-                />
+                <div className="relative">
+                  <Select 
+                    value={isUSA ? "usa" : "international"}
+                    onValueChange={(value: string) => {
+                      setIsUSA(value === "usa");
+                      setShippingDetails(prev => ({
+                        ...prev,
+                        country: value === "usa" ? "United States" : prev.country
+                      }))
+                    }}
+                  >
+                    <SelectTrigger className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                      text-white focus:outline-none focus:ring-2 focus:ring-[#A67C52] focus:border-transparent
+                      hover:bg-white/[0.15] transition-colors">
+                      <SelectValue placeholder="Select your location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="usa">United States</SelectItem>
+                      <SelectItem value="international">International</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {!isUSA && (
+                    <input
+                      type="text"
+                      id="country"
+                      required
+                      className="mt-2 w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
+                        text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                        focus:ring-[#A67C52] focus:border-transparent
+                        hover:bg-white/[0.15] transition-colors"
+                      placeholder="Enter your country"
+                      value={shippingDetails.country}
+                      onChange={(e) => setShippingDetails(prev => ({ ...prev, country: e.target.value }))}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4 mt-6">
@@ -552,67 +664,75 @@ export default function CheckoutPage() {
 
                 {/* Shipping Method Selection */}
                 <div className="mb-6">
-                  <h3 className="text-white font-medium mb-4">Shipping Method</h3>
-                  <RadioGroup 
-                    className="gap-2" 
-                    defaultValue="simple"
-                    value={shippingMethod}
-                    onValueChange={(value) => setShippingMethod(value as 'simple' | 'fast')}
-                  >
-                    <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-                      <RadioGroupItem
-                        value="simple"
-                        className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-                      />
-                      <div className="grid grow gap-2">
-                        <Label className="text-white">
-                          Simple Shipping
-                          <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
-                            (Free)
-                          </span>
-                        </Label>
-                        <p className="text-xs text-white/60">
-                          Standard delivery within 5-7 business days
-                        </p>
-                      </div>
+                  <h3 className="text-white font-medium mb-4">Shipping Information</h3>
+                  <div className="rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-white">Location:</span>
+                      <span className="text-white font-medium">{isUSA ? 'United States' : 'International'}</span>
                     </div>
-                    <div className="relative flex w-full items-start gap-2 rounded-lg border border-white/10 p-4 shadow-sm shadow-black/5 has-[[data-state=checked]]:border-[#A67C52]">
-                      <RadioGroupItem
-                        value="fast"
-                        className="order-1 after:absolute after:inset-0 border-[#A67C52] data-[state=checked]:bg-[#A67C52]"
-                      />
-                      <div className="grid grow gap-2">
-                        <Label className="text-white">
-                          Fast Shipping
-                          <span className="text-xs font-normal leading-[inherit] text-white/60 ml-2">
-                            ($20.00)
+                    
+                    {productTypes.length > 0 && (
+                      <>
+                        <div className="text-xs text-white/60 my-2">
+                          Your order contains:
+                          <ul className="mt-1 ml-4 list-disc">
+                            {productTypes.map(type => (
+                              <li key={type}>{type.charAt(0) + type.slice(1).toLowerCase()}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div className="flex justify-between mt-3 pt-3 border-t border-white/10">
+                          <span className="text-white">Shipping Cost:</span>
+                          <span className="text-[#A67C52] font-medium">
+                            {shippingCost === 0 
+                              ? 'FREE' 
+                              : `$${shippingCost.toFixed(2)}`
+                            }
                           </span>
-                        </Label>
-                        <p className="text-xs text-white/60">
-                          Express delivery within 2-3 business days
+                        </div>
+                        
+                        <p className="text-xs text-white/60 mt-2">
+                          {shippingCost === 0 
+                            ? 'Free shipping for your products.'
+                            : `Standard delivery within 5-10 business days.`
+                          }
                         </p>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {selectedToken && (
-                  <div className="mt-6 pt-4 border-t border-white/10">
-                    <div className="flex justify-between text-[#A67C52]/80 mb-2">
-                      <span>Subtotal</span>
-                      <span>${total.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[#A67C52]/80 mb-2">
-                      <span>Shipping</span>
-                      <span>{shippingMethod === 'fast' ? '$20.00' : 'Free'}</span>
-                    </div>
-                    <div className="flex justify-between text-[#A67C52] font-medium mb-2">
-                      <span>Total in USD</span>
-                      <span>${getTotalWithShipping().toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[#A67C52] font-medium">
-                      <span>Amount in {selectedToken.ticker}</span>
-                      <span>{getTokenAmount(selectedToken)} {selectedToken.ticker}</span>
+                  <div className="mt-4 space-y-2">
+                    <div className="pt-4 border-t border-white/10">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-white/60">Subtotal:</span>
+                        <span className="text-white/60">
+                          ${total.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-white/60">Shipping:</span>
+                        <span className="text-white/60">
+                          {shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-white">Order Total:</span>
+                        <span className="text-xl font-bold text-white">
+                          ${getTotalWithShipping().toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <div className="text-xs text-white/60 mt-3">
+                        Estimated price in {selectedToken.ticker}:
+                      </div>
+                      <div className="text-lg font-medium text-[#A67C52]">
+                        {getTokenAmount(selectedToken)} {selectedToken.ticker}
+                      </div>
                     </div>
                   </div>
                 )}
