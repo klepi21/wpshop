@@ -90,7 +90,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               </div>
               <div className="flex justify-between mb-4">
                 <span className="text-white/60">Shipping</span>
-                <span className="text-white">Free</span>
+                <span className="text-white">Calculated at checkout</span>
               </div>
               <div className="flex justify-between mb-4">
                 <span className="text-white font-medium">Total</span>
