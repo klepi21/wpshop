@@ -6,6 +6,7 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { productService } from '@/services/products';
 import { categoryService } from '@/services/categories';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -155,6 +156,47 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
                 className="w-full px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white"
                 required
               />
+            </div>
+          </div>
+
+          {/* Category Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">
+              Category
+            </label>
+            <Select 
+              value={formData.category_id} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+            >
+              <SelectTrigger className="w-full px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">
+                Stock
+              </label>
+              <input
+                type="number"
+                value={formData.stock}
+                onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
+                className="w-full px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white"
+                required={!formData.has_sizes}
+                disabled={formData.has_sizes}
+              />
+              {formData.has_sizes && (
+                <p className="text-xs text-white/60 mt-1">Stock is managed per variation when sizes are enabled</p>
+              )}
             </div>
           </div>
 
