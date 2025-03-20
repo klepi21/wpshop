@@ -5,12 +5,21 @@ export type Category = Database['categories'];
 
 export const categoryService = {
   async getAll() {
+    // Fetch categories with a count of related products
     const { data, error } = await supabase
       .from('categories')
-      .select('*');
+      .select(`
+        *,
+        products:products(id)
+      `);
     
     if (error) throw error;
-    return data;
+    
+    // Transform data to include product count
+    return data.map((category: any) => ({
+      ...category,
+      products: category.products || []
+    }));
   },
 
   async create(category: Omit<Category, 'id' | 'created_at' | 'updated_at'>) {
