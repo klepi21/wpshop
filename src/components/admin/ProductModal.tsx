@@ -74,14 +74,30 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
     }
   };
 
+  // Generate a slug from product name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Add slug to the form data
+      const productDataWithSlug = {
+        ...formData,
+        slug: product?.slug || generateSlug(formData.name)
+      };
+
       if (product) {
-        await productService.update(product.id, formData);
+        await productService.update(product.id, productDataWithSlug);
         toast.success('Product updated successfully');
       } else {
-        await productService.create(formData);
+        await productService.create(productDataWithSlug);
         toast.success('Product created successfully');
       }
       onProductSaved();
