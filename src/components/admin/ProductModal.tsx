@@ -32,6 +32,9 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
 
   useEffect(() => {
     if (product) {
+      // Make sure we explicitly cast has_sizes to boolean to avoid any issues
+      const hasSizes = product.has_sizes === true;
+      
       setFormData({
         name: product.name || '',
         description: product.description || '',
@@ -39,11 +42,13 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
         stock: product.stock?.toString() || '',
         category_id: product.category_id || '',
         images: product.images || [],
-        has_sizes: product.has_sizes || false,
+        has_sizes: hasSizes,
         is_featured: product.is_featured || false,
         has_customization: product.has_customization || false,
         variations: product.variations || []
       });
+      
+      console.log('Editing product with has_sizes:', hasSizes);
     } else {
       setFormData({
         name: '',
@@ -63,6 +68,17 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // Add an effect to handle the has_sizes checkbox toggling
+  useEffect(() => {
+    if (formData.has_sizes && formData.variations.length === 0) {
+      // If sizes are enabled but no variations exist yet, create an initial one
+      setFormData(prev => ({
+        ...prev,
+        variations: [{ name: '', stock: parseInt(prev.stock) || 0 }]
+      }));
+    }
+  }, [formData.has_sizes]);
 
   const loadCategories = async () => {
     try {
@@ -252,7 +268,24 @@ export function ProductModal({ isOpen, onClose, product, onProductSaved }: Produ
                 type="checkbox"
                 id="has_sizes"
                 checked={formData.has_sizes}
-                onChange={(e) => setFormData(prev => ({ ...prev, has_sizes: e.target.checked }))}
+                onChange={(e) => {
+                  const hasVariations = e.target.checked;
+                  setFormData(prev => {
+                    const updatedData = { 
+                      ...prev, 
+                      has_sizes: hasVariations
+                    };
+                    
+                    // When toggling off variations, make sure to restore stock value
+                    if (!hasVariations && prev.variations.length > 0) {
+                      // Calculate total stock from variations or use first variation's stock
+                      const totalStock = prev.variations.reduce((sum, v) => sum + (v.stock || 0), 0);
+                      updatedData.stock = totalStock.toString();
+                    }
+                    
+                    return updatedData;
+                  });
+                }}
                 className="w-4 h-4 rounded border-white/20 bg-white/10 text-[#A67C52] 
                   focus:ring-[#A67C52] focus:ring-offset-0"
               />
