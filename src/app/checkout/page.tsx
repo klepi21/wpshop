@@ -64,7 +64,15 @@ const SHIPPING_COSTS = {
   SUNGLASSES: { USA: 13.50, INTERNATIONAL: 24.00 },
   KEYCHAINS: { USA: 10.00, INTERNATIONAL: 22.50 },
   HOODIES: { USA: 0.00, INTERNATIONAL: 0.00 }, // Free shipping
-  COASTERS: { USA: 13.50, INTERNATIONAL: 24.00 }
+  COASTERS: { USA: 13.50, INTERNATIONAL: 24.00 },
+  JEWELRY: { USA: 10.00, INTERNATIONAL: 22.50 }
+};
+
+// Special combination shipping costs
+const COMBINED_SHIPPING_COSTS = {
+  "SUNGLASSES+KEYCHAINS": { USA: 16.00, INTERNATIONAL: 45.00 },
+  "SUNGLASSES+JEWELRY": { USA: 16.00, INTERNATIONAL: 45.00 },
+  "JEWELRY+COASTERS": { USA: 16.00, INTERNATIONAL: 45.00 }
 };
 
 // Product categories to types mapping
@@ -82,6 +90,10 @@ const PRODUCT_TYPE_MAPPING = {
   'coaster': 'COASTERS',
   'drink': 'COASTERS',
   'cup holder': 'COASTERS',
+  'jewelry': 'JEWELRY',
+  'necklace': 'JEWELRY',
+  'bracelet': 'JEWELRY',
+  'earring': 'JEWELRY'
 };
 
 export default function CheckoutPage() {
@@ -219,10 +231,24 @@ export default function CheckoutPage() {
       Object.entries(PRODUCT_TYPE_MAPPING).forEach(([keyword, typeName]) => {
         if (nameLower.includes(keyword)) {
           foundType = typeName;
+          console.log(`Found type "${typeName}" for item "${item.name}" based on keyword "${keyword}"`);
         }
       });
       
-      // If we couldn't determine the type, use SUNGLASSES as default (highest shipping cost)
+      // If we couldn't determine the type, check for additional category-specific keywords
+      if (!foundType) {
+        // Check for jewelry-specific terms
+        const jewelryTerms = ['ring', 'pendant', 'silver', 'gold', 'necklace', 'bracelet', 'earring', 'jewelry'];
+        for (const term of jewelryTerms) {
+          if (nameLower.includes(term)) {
+            foundType = 'JEWELRY';
+            console.log(`Found JEWELRY type for item "${item.name}" based on term "${term}"`);
+            break;
+          }
+        }
+      }
+      
+      // If we still couldn't determine the type, use SUNGLASSES as default (highest shipping cost)
       if (!foundType) {
         foundType = 'SUNGLASSES';
         console.log(`Couldn't determine type for "${item.name}", using default: SUNGLASSES`);
@@ -248,7 +274,38 @@ export default function CheckoutPage() {
       return;
     }
     
-    // Calculate shipping costs for each product type
+    // Check for special combinations first
+    if (types.length >= 2) {
+      // Sort types for consistent keys regardless of order
+      const uniqueTypes = [...new Set(types)].sort();
+      
+      // Check for specific combinations
+      if (uniqueTypes.includes('SUNGLASSES') && uniqueTypes.includes('KEYCHAINS')) {
+        const combinationCost = COMBINED_SHIPPING_COSTS["SUNGLASSES+KEYCHAINS"];
+        const cost = isUSA ? combinationCost.USA : combinationCost.INTERNATIONAL;
+        console.log('Using combination shipping (SUNGLASSES+KEYCHAINS):', cost);
+        setShippingCost(cost);
+        return;
+      }
+      
+      if (uniqueTypes.includes('SUNGLASSES') && uniqueTypes.includes('JEWELRY')) {
+        const combinationCost = COMBINED_SHIPPING_COSTS["SUNGLASSES+JEWELRY"];
+        const cost = isUSA ? combinationCost.USA : combinationCost.INTERNATIONAL;
+        console.log('Using combination shipping (SUNGLASSES+JEWELRY):', cost);
+        setShippingCost(cost);
+        return;
+      }
+      
+      if (uniqueTypes.includes('JEWELRY') && uniqueTypes.includes('COASTERS')) {
+        const combinationCost = COMBINED_SHIPPING_COSTS["JEWELRY+COASTERS"];
+        const cost = isUSA ? combinationCost.USA : combinationCost.INTERNATIONAL;
+        console.log('Using combination shipping (JEWELRY+COASTERS):', cost);
+        setShippingCost(cost);
+        return;
+      }
+    }
+    
+    // If no special combination matches, use the standard approach (highest cost)
     const costs = types.map(type => {
       const costObj = SHIPPING_COSTS[type as keyof typeof SHIPPING_COSTS];
       if (!costObj) return 0;
@@ -258,7 +315,7 @@ export default function CheckoutPage() {
     
     // Use the highest shipping cost
     const highestCost = Math.max(...costs);
-    console.log('Shipping costs by type:', costs, 'Highest cost:', highestCost);
+    console.log('Standard shipping costs by type:', costs, 'Highest cost:', highestCost);
     setShippingCost(highestCost);
   };
 
