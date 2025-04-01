@@ -101,12 +101,26 @@ export const productService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      // First delete all variations to handle foreign key constraints
+      const { error: varDeleteError } = await supabase
+        .from('product_variations')
+        .delete()
+        .eq('product_id', id);
+      
+      if (varDeleteError) throw varDeleteError;
+      
+      // Then delete the product
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
   },
 
   async getBySlug(slug: string) {

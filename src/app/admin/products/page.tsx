@@ -37,10 +37,20 @@ export default function AdminProductsPage() {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await productService.delete(id);
-        toast.success('Product deleted');
+        toast.success('Product deleted successfully');
         fetchProducts();
       } catch (error) {
-        toast.error('Failed to delete product');
+        console.error('Failed to delete product:', error);
+        if (typeof error === 'object' && error !== null && 'message' in error) {
+          const errorMsg = error.message as string;
+          if (errorMsg.includes('foreign key constraint') || errorMsg.includes('violates foreign key constraint')) {
+            toast.error('This product cannot be deleted because it is part of existing orders');
+          } else {
+            toast.error('Failed to delete product');
+          }
+        } else {
+          toast.error('Failed to delete product');
+        }
       }
     }
   };
